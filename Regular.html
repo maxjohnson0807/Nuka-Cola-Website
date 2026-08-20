@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuka-Cola Classic — Ice Cold &amp; Bubbly Good!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Lilita+One&amp;family=Lobster&amp;family=Luckiest+Guy&amp;display=block" rel="stylesheet" />
+    <link rel="stylesheet" href="MaxJohnsonStyleSheet.css" type="text/css" />
+</head>
+<body>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="site-header">
+        <div class="header-bar">
+            <video
+                class="header-bar__video"
+                autoplay
+                muted
+                loop
+                playsinline
+                poster="HeaderBar2.png"
+                aria-hidden="true"
+            >
+                <source src="MovingBarRed2.mp4" type="video/mp4" />
+            </video>
+            <a href="index.html">
+                <img src="thisone5.png" alt="Nuka-Cola" />
+            </a>
+        </div>
+        <nav class="nav-cream" aria-label="Main">
+            <a href="index.html">HOME</a>
+            <a href="index.html#buy">BUY NOW</a>
+            <a href="index.html#story">OUR STORY</a>
+            <a href="index.html#game">NUKE GAME</a>
+        </nav>
+    </header>
+
+    <main class="product-page">
+        <section class="product-hero" aria-labelledby="product-title">
+            <div class="product-hero__visual">
+                <div class="product-hero__well">
+                    <img src="Regular.png" alt="Nuka-Cola Classic rocket bottle" width="520" height="640" decoding="async" />
+                </div>
+            </div>
+            <div class="product-hero__copy">
+                <h1 class="product-hero__title" id="product-title">Nuka-Cola Classic</h1>
+                <h2 class="product-hero__why">WHY CHOOSE NUKA-COLA CLASSIC?</h2>
+                <p class="product-hero__desc">
+                    Nuka-Cola Classic is the original ice-cold, bubbly-good soda of the Wasteland — a secret blend of seventeen fruit flavors packed into a rocket-shaped bottle. Bright caramel-cola taste, a kick of caffeine, and that trademark fizz make every sip a blast from the past. Whether you are stocking a bomb shelter or a backyard cookout, Regular is the flavor that started it all.
+                </p>
+                <p class="product-hero__note">
+                    *Refreshment levels may vary after a direct nuclear blast. Best served ice cold. Please shake bottle before opening. Do not shake bottle before opening.
+                </p>
+
+                <h3 class="product-hero__label">AVAILABLE SIZES</h3>
+                <div class="product-sizes">
+                    <span class="product-size is-active">12 fl oz</span>
+                </div>
+
+                <div class="product-facts">
+                    <div class="product-facts__tabs" role="tablist" aria-label="Product facts">
+                        <button
+                            type="button"
+                            class="product-facts__tab"
+                            role="tab"
+                            id="tab-ingredients"
+                            aria-controls="panel-ingredients"
+                            aria-selected="true"
+                            data-product-tab="ingredients"
+                        >
+                            Ingredients
+                        </button>
+                        <button
+                            type="button"
+                            class="product-facts__tab"
+                            role="tab"
+                            id="tab-nutrition"
+                            aria-controls="panel-nutrition"
+                            aria-selected="false"
+                            data-product-tab="nutrition"
+                        >
+                            Nutrition
+                        </button>
+                    </div>
+                    <div
+                        class="product-facts__panel"
+                        id="panel-ingredients"
+                        role="tabpanel"
+                        aria-labelledby="tab-ingredients"
+                        data-product-panel="ingredients"
+                    >
+                        <p class="product-ingredients">
+                            CARBONATED WATER, SUGAR, CARAMEL COLOR, PHOSPHORIC ACID, NATURAL AND ARTIFICIAL FLAVORS, CAFFEINE, CITRIC ACID, AND THE SECRET SEVENTEEN-FRUIT NUKA BLEND.
+                        </p>
+                    </div>
+                    <div
+                        class="product-facts__panel"
+                        id="panel-nutrition"
+                        role="tabpanel"
+                        aria-labelledby="tab-nutrition"
+                        data-product-panel="nutrition"
+                        hidden
+                    >
+                        <table class="product-nutrition">
+                            <caption>
+                                Serving Size 12 fl oz &nbsp;·&nbsp; Servings Per Container 1
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Amount Per Serving</th>
+                                    <th scope="col">% Daily Value *</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Calories 140</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Total Fat 0g</td>
+                                    <td>0%</td>
+                                </tr>
+                                <tr>
+                                    <td>Sodium 45mg</td>
+                                    <td>2%</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Carbohydrate 39g</td>
+                                    <td>14%</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Sugars 39g</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Added Sugars 39g</td>
+                                    <td>78%</td>
+                                </tr>
+                                <tr>
+                                    <td>Protein 0g</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Caffeine 35mg</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="product-more" aria-labelledby="product-more-title">
+            <h2 class="product-more__title" id="product-more-title">Explore our other flavors</h2>
+            <div class="product-more__grid">
+                <a class="product-more__card" href="index.html">
+                    <div class="product-more__media">
+                        <img src="Cherry.png" alt="" width="280" height="210" loading="lazy" decoding="async" />
+                    </div>
+                    <h3>Nuka-Cola Cherry</h3>
+                </a>
+                <a class="product-more__card" href="index.html">
+                    <div class="product-more__media">
+                        <img src="Quantumn.png" alt="" width="280" height="210" loading="lazy" decoding="async" />
+                    </div>
+                    <h3>Nuka-Cola Quantum</h3>
+                </a>
+                <a class="product-more__card" href="index.html">
+                    <div class="product-more__media">
+                        <img src="Orange.png" alt="" width="280" height="210" loading="lazy" decoding="async" />
+                    </div>
+                    <h3>Nuka-Cola Orange</h3>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-sparkles" aria-hidden="true"></div>
+        <p class="footer-slogan">
+            <span class="footer-star" aria-hidden="true">✦</span>
+            BE A PART OF THE FUN!
+            <span class="footer-star" aria-hidden="true">✦</span>
+        </p>
+    </footer>
+
+    <script>
+        (function () {
+            var tabs = document.querySelectorAll("[data-product-tab]");
+            var panels = document.querySelectorAll("[data-product-panel]");
+            if (!tabs.length) return;
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener("click", function () {
+                    var id = tab.getAttribute("data-product-tab");
+                    tabs.forEach(function (t) {
+                        t.setAttribute("aria-selected", t === tab ? "true" : "false");
+                    });
+                    panels.forEach(function (panel) {
+                        panel.hidden = panel.getAttribute("data-product-panel") !== id;
+                    });
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -4,10 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nuka Cola — Ice Cold &amp; Bubbly Good!</title>
-    <link rel="stylesheet" href="MaxJohnsonStyleSheet.css" type="text/css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Lilita+One&amp;family=Lobster&amp;display=swap" rel="stylesheet" />
+    <link rel="preload" href="MovingBlueBar.mp4" as="video" type="video/mp4" />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Lilita+One&amp;family=Lobster&amp;family=Luckiest+Guy&amp;display=block" rel="stylesheet" />
+    <link rel="stylesheet" href="MaxJohnsonStyleSheet.css" type="text/css" />
+    <script>
+        document.documentElement.classList.add("js-ready");
+    </script>
     <style>
         /* Widen the highlights carousel vs MaxJohnsonStyleSheet.css (1420px cap) */
         .looping-scroll__inner {
@@ -20,7 +24,18 @@
 
     <header class="site-header">
         <div class="header-bar">
-            <img src="thisone5.png"/>
+            <video
+                class="header-bar__video"
+                autoplay
+                muted
+                loop
+                playsinline
+                poster="HeaderBar2.png"
+                aria-hidden="true"
+            >
+                <source src="MovingBarRed2.mp4" type="video/mp4" />
+            </video>
+            <img src="thisone5.png" alt="" />
         </div>
         <nav class="nav-cream" aria-label="Main">
             
@@ -28,11 +43,24 @@
             <a href="#buy">BUY NOW</a>
             <a href="#story">OUR STORY</a>
             <a href="#game">NUKE GAME</a>
-
+            <!--I need to raise the our flavors tab up to the bottle. I also question the blue background behind the drink.
+            Everything else if probalby fine, because realistcyll there's only so much made up stuff I can add to this website.
+            If anything try to add some kind ove liveliness so it's not so static. (Javascript for hovering effects, or really anything. No not snow.)-->
         </nav>
     </header>
 
     <section class="hero" id="top">
+        <div class="hero-bg" aria-hidden="true">
+            <video
+                class="hero-bg-video"
+                autoplay
+                muted
+                playsinline
+                preload="auto"
+            >
+                <source src="MovingBlueBar.mp4" type="video/mp4" />
+            </video>
+        </div>
         <div class="hero-sparkles" aria-hidden="true"></div>
         <div class="hero-inner">
             <div class="hero-copy">
@@ -70,7 +98,7 @@
                         <div class="looping-scroll__media">
                             <img src="Regular.png" alt="Regular" width="280" height="210" loading="lazy" decoding="async" />
                         </div>
-                        <a class="looping-scroll__btn" href="#story">Find out more!</a>
+                        <a class="looping-scroll__btn" href="Regular.html">Find out more!</a>
                     </article>
                     <article class="looping-scroll__item">
                         <div class="looping-scroll__media">
@@ -157,7 +185,7 @@
                             />
                         </div>
                         <div class="circus-desc">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>
+                            <p>With over 10 unique flavors filled with multivitamins and health tonics, Nuka Cola is guaranteed to fix your whole family's sugar crave and save the day! Click here to learn the history of the Wasteland's most popular soft drink and how we get our unique taste! 
                         </div>
                     </div>
                 </div>
@@ -178,7 +206,7 @@
                             />
                         </div>
                         <div class="circus-desc">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>
+                            <p>Each bottle contains a unique code that gives you a chance to win unique bobblehead prizes that increase your superhuman or mutant strength! Can you collect them all and become the Wasteland's ultimate loser?</p>
                         </div>
                     </div>
                 </div>
@@ -199,7 +227,7 @@
                             />
                         </div>
                         <div class="circus-desc">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>
+                            <p>Click here to play our flagship- or rocketship for that matter game Nuke Dropper! </p>
                         </div>
                     </div>
                 </div>
@@ -270,6 +298,83 @@
                 new ResizeObserver(sync).observe(viewport);
             }
             sync();
+        })();
+
+        (function () {
+            var video = document.querySelector(".hero-bg-video");
+            if (!video) return;
+
+            function revealVideo() {
+                video.classList.add("is-ready");
+            }
+
+            if (video.readyState >= 2) {
+                revealVideo();
+            } else {
+                video.addEventListener("loadeddata", revealVideo, { once: true });
+                video.addEventListener("playing", revealVideo, { once: true });
+            }
+
+            video.addEventListener("ended", function () {
+                video.pause();
+                if (video.duration && isFinite(video.duration)) {
+                    video.currentTime = Math.max(0, video.duration - 0.05);
+                }
+            });
+        })();
+
+        (function () {
+            var html = document.documentElement;
+            var shown = false;
+
+            function revealFonts() {
+                if (shown) return;
+                shown = true;
+                html.classList.add("fonts-ready");
+            }
+
+            var timeout = setTimeout(revealFonts, 1800);
+            if (document.fonts && document.fonts.load) {
+                Promise.all([
+                    document.fonts.load('1em "Luckiest Guy"'),
+                    document.fonts.load('1em "Lilita One"')
+                ]).then(function () {
+                    clearTimeout(timeout);
+                    revealFonts();
+                }).catch(function () {
+                    clearTimeout(timeout);
+                    revealFonts();
+                });
+            } else {
+                revealFonts();
+            }
+        })();
+
+        (function () {
+            var cards = document.querySelectorAll(".content-card");
+            if (!cards.length) return;
+
+            if (!("IntersectionObserver" in window)) {
+                cards.forEach(function (card) {
+                    card.classList.add("is-visible");
+                });
+                return;
+            }
+
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                });
+            }, {
+                threshold: 0.08,
+                rootMargin: "0px 0px 10% 0px"
+            });
+
+            cards.forEach(function (card) {
+                observer.observe(card);
+            });
         })();
     </script>
 </body>
