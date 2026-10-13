@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nuka-Cola Catch — Ice Cold &amp; Bubbly Good!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Lilita+One&amp;family=Lobster&amp;family=Luckiest+Guy&amp;display=block" rel="stylesheet" />
+  <link rel="stylesheet" href="MaxJohnsonStyleSheet.css" type="text/css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="header-bar">
+      <video
+        class="header-bar__video"
+        autoplay
+        muted
+        loop
+        playsinline
+        poster="HeaderBar2.png"
+        aria-hidden="true"
+      >
+        <source src="MovingBarRed2.mp4" type="video/mp4" />
+      </video>
+      <a href="index.html">
+        <img src="thisone5.png" alt="Nuka-Cola" />
+      </a>
+    </div>
+    <nav class="nav-cream" aria-label="Main">
+      <a href="index.html">HOME</a>
+      <a href="index.html#buy">BUY NOW</a>
+      <a href="index.html#story">OUR STORY</a>
+      <a href="Games.html">NUKE GAME</a>
+    </nav>
+  </header>
+
+  <main class="game-page">
+    <article class="content-card">
+      <header class="content-card__header">
+        <h2>NUKA-COLA CATCH</h2>
+      </header>
+      <div class="content-card__body">
+        <p class="game-hint">Move with the mouse or A/D. Catch falling flavors — avoid the nukes!</p>
+        <div class="game-stage">
+          <div id="gameContainer">
+            <canvas id="gameCanvas" class="game-canvas--catch" width="960" height="880"></canvas>
+            <div id="ui" class="game-ui">
+              <div>Score: <span id="score">0</span></div>
+              <div>Lives: <span id="lives">3</span></div>
+              <div>Combo: <span id="combo">0</span></div>
+            </div>
+            <div id="message" class="game-message"></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-sparkles" aria-hidden="true"></div>
+    <p class="footer-slogan">
+      <span class="footer-star" aria-hidden="true">✦</span>
+      BE A PART OF THE FUN!
+      <span class="footer-star" aria-hidden="true">✦</span>
+    </p>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const comboEl = document.getElementById('combo');
+    const messageEl = document.getElementById('message');
+
+    function keyBlackBackground(img) {
+      if (!img || !img.naturalWidth) return null;
+      try {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ic = c.getContext('2d');
+      ic.drawImage(img, 0, 0);
+      const data = ic.getImageData(0, 0, c.width, c.height);
+      const px = data.data;
+      const w = c.width;
+      const h = c.height;
+      const isBg = function (i) {
+        return px[i] < 16 && px[i + 1] < 16 && px[i + 2] < 16 && px[i + 3] > 0;
+      };
+      const visited = new Uint8Array(w * h);
+      const stack = [];
+      function tryPush(x, y) {
+        if (x < 0 || y < 0 || x >= w || y >= h) return;
+        const idx = y * w + x;
+        if (visited[idx]) return;
+        visited[idx] = 1;
+        if (isBg(idx * 4)) stack.push(idx);
+      }
+      for (let x = 0; x < w; x++) {
+        tryPush(x, 0);
+        tryPush(x, h - 1);
+      }
+      for (let y = 0; y < h; y++) {
+        tryPush(0, y);
+        tryPush(w - 1, y);
+      }
+      while (stack.length) {
+        const idx = stack.pop();
+        px[idx * 4 + 3] = 0;
+        const x = idx % w;
+        const y = (idx / w) | 0;
+        tryPush(x - 1, y);
+        tryPush(x + 1, y);
+        tryPush(x, y - 1);
+        tryPush(x, y + 1);
+      }
+      ic.putImageData(data, 0, 0);
+      return c;
+      } catch (err) {
+        return img;
+      }
+    }
+
+    function loadFlavorSprite(flavor) {
+      if (!flavor.src) return Promise.resolve();
+      return new Promise(function (resolve) {
+        const img = new Image();
+        img.onload = function () {
+          flavor.sprite = keyBlackBackground(img);
+          resolve();
+        };
+        img.onerror = function () { resolve(); };
+        img.src = flavor.src;
+      });
+    }
+
+    const bgImg = new Image();
+    bgImg.src = 'Game1Background1.webp';
+
+    //Game State
+    const flavors = [
+      { name: 'Regular', color: '#8B4513', points: 10, src: 'Regular.png' },
+      { name: 'Orange', color: '#FF8C00', points: 15, src: 'Orange.png' },
+      { name: 'Cherry', color: '#DC143C', points: 15, src: 'Cherry.png' },
+      { name: 'Grape', color: '#8A2BE2', points: 15, src: 'Grape.png' },
+      { name: 'Dark', color: '#5D4037', points: 12, src: 'Dark.png' },
+      { name: 'Victory', color: '#FFD700', points: 20, src: 'Victory.png' },
+      { name: 'Quantumn', color: '#00BFFF', points: 30, src: 'Quantumn.png' },
+      { name: 'Twist', color: '#FF69B4', points: 25, src: 'Twist.png' },
+      { name: 'Cranberry', color: '#FF69B4', points: 25, src: 'Cranberry.png' },
+      { name: 'Wild', color: '#FF69B4', points: 25, src: 'Wild.png' },
+      { name: 'Quartz', color: '#FF69B4', points: 25, src: 'Quartz.png' },
+      { name: 'Irradiated', color: '#39FF14', points: -20, src: 'Nuke2.png' }
+    ];
+
+    flavors.forEach(loadFlavorSprite);
+
+    let score = 0;
+    let lives = 3;
+    let combo = 0;
+    let gameOver = false;
+    let keys = {};
+    let mouseX = canvas.width / 2;
+
+    //Player Basket
+    //Originally 48 and 96.
+    const bottleW = 64;
+    const bottleH = 128;
+
+    const player = {
+      x: canvas.width / 2 - 45,
+      y: canvas.height - 78,
+      width: 90,
+      height: 40,
+      speed: 8
+    };
+//Interval has frames.
+    const MAX_BOTTLES_CAP = 10;
+    let maxBottles = 4;
+    let bottles = [];
+    let spawnTimer = 0;
+    let spawnInterval = 60;
+
+    //Input
+
+    function canvasMouseX(e) {
+      const rect = canvas.getBoundingClientRect();
+      return (e.clientX - rect.left) * (canvas.width / rect.width);
+    }
+
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+    canvas.addEventListener('mousemove', e => {
+      mouseX = canvasMouseX(e);
+    });
+
+    function spawnBottle() {
+      const flavor = flavors[Math.floor(Math.random() * flavors.length)];
+      bottles.push({
+        x: Math.random() * (canvas.width - bottleW),
+        y: -bottleH,
+        width: bottleW,
+        height: bottleH,
+        speed: 0.1 + Math.random() * 0.5,
+        flavor: flavor
+      });
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      //Player movement
+
+      if (keys['ArrowLeft'] || keys['a']) player.x -= player.speed;
+      if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
+      //Mouse Control here
+      player.x = mouseX - player.width / 2;
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+      //Spawn bottles
+      spawnTimer++;
+      if (spawnTimer >= spawnInterval) {
+        spawnTimer = 0;
+        if (bottles.length < Math.floor(maxBottles)) {
+          spawnBottle();
+        }
+
+        //it'll slowly get harder with the -0.3
+        if (spawnInterval > 25) spawnInterval -= 0.3;
+        if (maxBottles < MAX_BOTTLES_CAP) {
+          maxBottles = Math.min(MAX_BOTTLES_CAP, maxBottles + 0.04);
+        }
+      }
+      //Update bottles
+      for (let i = bottles.length - 1; i >= 0; i--) {
+        const b = bottles[i];
+        b.y += b.speed;
+
+        //Catch check
+        if (b.y + b.height > player.y &&
+            b.x < player.x + player.width &&
+            b.x + b.width > player.x &&
+            b.y < player.y + player.height) {
+
+          score += b.flavor.points;
+          if (b.flavor.points > 0) {
+            combo++;
+            score += combo; //Combo bonus
+          } else {
+            combo = 0;
+            lives--;
+          }
+          bottles.splice(i, 1);
+          updateUI();
+          continue;
+        }
+
+        //Missed
+        if (b.y > canvas.height) {
+          if (b.flavor.points > 0) {
+            lives--;
+            combo = 0;
+          }
+          bottles.splice(i, 1);
+          updateUI();
+        }
+      }
+
+      if (lives <= 0) {
+        gameOver = true;
+        messageEl.style.display = 'block';
+        messageEl.innerHTML = `Game Over!<br>Final Score: ${score}<br><small>Refresh to play again</small>`;
+      }
+    }
+
+    function updateUI() {
+      scoreEl.textContent = score;
+      livesEl.textContent = lives;
+      comboEl.textContent = combo;
+    }
+
+    function drawNuke(b) {
+      ctx.fillStyle = b.flavor.color;
+      ctx.fillRect(b.x + 8, b.y + 12, b.width - 16, b.height - 20);
+      ctx.fillRect(b.x + b.width / 2 - 7, b.y, 14, 16);
+      ctx.fillStyle = '#fff';
+      ctx.font = '10px "Lilita One", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.flavor.name.substring(0, 6), b.x + b.width / 2, b.y + b.height / 2 + 4);
+    }
+
+    function draw() {
+      if (bgImg.complete && bgImg.naturalWidth) {
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = '#0d1f0d';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      //Player basket
+      ctx.fillStyle = '#555';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.fillStyle = '#888';
+      ctx.fillRect(player.x + 5, player.y + 5, player.width - 10, 10);
+      // TODO: ctx.drawImage(images.basket, player.x, player.y, player.width, player.height);
+
+      // Bottles
+      bottles.forEach(b => {
+        if (b.flavor.sprite) {
+          ctx.drawImage(b.flavor.sprite, b.x, b.y, b.width, b.height);
+        } else {
+          drawNuke(b);
+        }
+      });
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Start
+    updateUI();
+    gameLoop();
+  </script>
+</body>
+</html>

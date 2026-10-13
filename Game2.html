@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nuka Bottle Blaster — Ice Cold &amp; Bubbly Good!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Lilita+One&amp;family=Lobster&amp;family=Luckiest+Guy&amp;display=block" rel="stylesheet" />
+  <link rel="stylesheet" href="MaxJohnsonStyleSheet.css" type="text/css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="header-bar">
+      <video
+        class="header-bar__video"
+        autoplay
+        muted
+        loop
+        playsinline
+        poster="HeaderBar2.png"
+        aria-hidden="true"
+      >
+        <source src="MovingBarRed2.mp4" type="video/mp4" />
+      </video>
+      <a href="index.html">
+        <img src="thisone5.png" alt="Nuka-Cola" />
+      </a>
+    </div>
+    <nav class="nav-cream" aria-label="Main">
+      <a href="index.html">HOME</a>
+      <a href="index.html#buy">BUY NOW</a>
+      <a href="index.html#story">OUR STORY</a>
+      <a href="Games.html">NUKE GAME</a>
+    </nav>
+  </header>
+
+  <main class="game-page">
+    <article class="content-card">
+      <header class="content-card__header">
+        <h2>RADROACH BLAST</h2>
+      </header>
+      <div class="content-card__body">
+        <p class="game-hint">Defend the last Nuka Cola Vending Machine from the Radroaches! Aim with the mouse and click or press space to fire!</p>
+        <div class="game-stage">
+          <div id="gameContainer">
+            <canvas id="gameCanvas" class="game-canvas--blaster" width="960" height="880"></canvas>
+            <div id="ui" class="game-ui">
+              <div>Score: <span id="score">0</span></div>
+              <div>Ammo: <span id="ammo">25</span></div>
+              <div>Lives: <span id="lives">3</span></div>
+            </div>
+            <div id="message" class="game-message"></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-sparkles" aria-hidden="true"></div>
+    <p class="footer-slogan">
+      <span class="footer-star" aria-hidden="true">✦</span>
+      BE A PART OF THE FUN!
+      <span class="footer-star" aria-hidden="true">✦</span>
+    </p>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const ammoEl = document.getElementById('ammo');
+    const livesEl = document.getElementById('lives');
+    const messageEl = document.getElementById('message');
+
+    function keyBlackBackground(img) {
+      if (!img || !img.naturalWidth) return null;
+      try {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ic = c.getContext('2d');
+      ic.drawImage(img, 0, 0);
+      const data = ic.getImageData(0, 0, c.width, c.height);
+      const px = data.data;
+      const w = c.width;
+      const h = c.height;
+      const isBg = function (i) {
+        return px[i] < 16 && px[i + 1] < 16 && px[i + 2] < 16 && px[i + 3] > 0;
+      };
+      const visited = new Uint8Array(w * h);
+      const stack = [];
+      function tryPush(x, y) {
+        if (x < 0 || y < 0 || x >= w || y >= h) return;
+        const idx = y * w + x;
+        if (visited[idx]) return;
+        visited[idx] = 1;
+        if (isBg(idx * 4)) stack.push(idx);
+      }
+      for (let x = 0; x < w; x++) {
+        tryPush(x, 0);
+        tryPush(x, h - 1);
+      }
+      for (let y = 0; y < h; y++) {
+        tryPush(0, y);
+        tryPush(w - 1, y);
+      }
+      while (stack.length) {
+        const idx = stack.pop();
+        px[idx * 4 + 3] = 0;
+        const x = idx % w;
+        const y = (idx / w) | 0;
+        tryPush(x - 1, y);
+        tryPush(x + 1, y);
+        tryPush(x, y - 1);
+        tryPush(x, y + 1);
+      }
+      ic.putImageData(data, 0, 0);
+      return c;
+      } catch (err) {
+        return img;
+      }
+    }
+
+    function loadFlavorSprite(flavor) {
+      if (!flavor.src) return Promise.resolve();
+      return new Promise(function (resolve) {
+        const img = new Image();
+        img.onload = function () {
+          flavor.sprite = keyBlackBackground(img);
+          resolve();
+        };
+        img.onerror = function () { resolve(); };
+        img.src = flavor.src;
+      });
+    }
+
+    const bgImg = new Image();
+    bgImg.src = 'VendingMachineBackground2.png';
+
+    const enemyImg = new Image();
+    let enemySprite = null;
+    enemyImg.onload = function () {
+      enemySprite = keyBlackBackground(enemyImg);
+    };
+    enemyImg.src = 'RadroachNew2.png';
+
+    const gunImg = new Image();
+    let gunSprite = null;
+    gunImg.onload = function () {
+      gunSprite = keyBlackBackground(gunImg);
+    };
+    gunImg.src = 'NukaColaGun.png';
+
+    const shootSound = new Audio('Laser4.wav');
+
+    const gunW = 88;
+    const gunH = 140;
+    const gunBarrelLength = gunH * 0.72;
+    const UI_BAR_HEIGHT = 56;
+
+    let score = 0;
+    let ammo = 25;
+    let lives = 3;
+    let gameOver = false;
+    let mouseX = canvas.width / 2;
+    let mouseY = canvas.height / 2;
+
+    // Player position (fixed at bottom center area)
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height - 78,
+      width: 60,
+      height: 40
+    };
+
+    // Projectiles (straight line)
+    let projectiles = [];
+
+    // Enemies
+    const MAX_ENEMIES_CAP = 20;
+    let maxEnemies = 4;
+    let enemies = [];
+    let spawnTimer = 0;
+    let spawnInterval = 70;
+
+    // Flavor types for ammo
+    const flavors = [
+      { name: 'Classic', color: '#8B4513', damage: 1, src: 'Regular.png' },
+      { name: 'Orange', color: '#FF8C00', damage: 1, src: 'Orange.png' },
+      { name: 'Cherry', color: '#DC143C', damage: 1, src: 'Cherry.png' },
+      { name: 'Grape', color: '#8A2BE2', damage: 1, src: 'Grape.png' },
+      { name: 'Dark', color: '#5D4037', damage: 1, src: 'Dark.png' },
+      { name: 'Quantum', color: '#00BFFF', damage: 2, src: 'Quantumn.png' },
+      { name: 'Victory', color: '#FFD700', damage: 1.5, src: 'Victory.png' },
+      { name: 'Twist', color: '#FF69B4', damage: 1, src: 'Twist.png' },
+      { name: 'Cranberry', color: '#C71585', damage: 1, src: 'Cranberry.png' },
+      { name: 'Wild', color: '#228B22', damage: 1, src: 'Wild.png' },
+      { name: 'Quartz', color: '#E6B800', damage: 1, src: 'Quartz.png' }
+    ];
+    let currentFlavor = flavors[0];
+
+    //Input
+    flavors.forEach(loadFlavorSprite);
+
+    function canvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const p = canvasPoint(e);
+      mouseX = p.x;
+      mouseY = p.y;
+    });
+
+    canvas.addEventListener('click', e => {
+      if (gameOver || ammo <= 0) return;
+      shoot();
+    });
+
+    //Alsso allow spacebar
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space' && !gameOver && ammo > 0) {
+        e.preventDefault();
+        shoot();
+      }
+    });
+
+    function aimAngle() {
+      return Math.atan2(mouseY - player.y, mouseX - player.x);
+    }
+
+    function barrelTip() {
+      const angle = aimAngle();
+      return {
+        x: player.x + Math.cos(angle) * gunBarrelLength,
+        y: player.y + Math.sin(angle) * gunBarrelLength,
+        angle: angle
+      };
+    }
+
+    function shoot() {
+      const tip = barrelTip();
+      const speed = 10;
+
+      const sfx = shootSound.cloneNode();
+      sfx.play().catch(function () {});
+
+      projectiles.push({
+        x: tip.x,
+        y: tip.y,
+        vx: Math.cos(tip.angle) * speed,
+        vy: Math.sin(tip.angle) * speed,
+        radius: 6,
+        flavor: currentFlavor,
+        life: 90,
+        width: 10,
+        height: 30
+      });
+
+      ammo--;
+      // Cycle flavor each shot for fun
+      currentFlavor = flavors[Math.floor(Math.random() * flavors.length)];
+      updateUI();
+    }
+
+    function spawnEnemy() {
+      const width = 110;
+      const height = 100;
+      enemies.push({
+        x: Math.random() * (canvas.width - width),
+        y: -height,
+        width: width,
+        height: height,
+        speed: 0.1 + Math.random() * 0.25,
+        hp: 1
+      });
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      // Projectiles (straight line)
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+
+        if (p.life <= 0 || p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+
+        // Hit enemies
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const e = enemies[j];
+          if (p.x > e.x && p.x < e.x + e.width &&
+              p.y > e.y && p.y < e.y + e.height) {
+            e.hp -= p.flavor.damage;
+            projectiles.splice(i, 1);
+            if (e.hp <= 0) {
+              score += 15;
+              // Chance to drop ammo
+              if (Math.random() < 0.3) ammo = Math.min(ammo + 3, 40);
+              enemies.splice(j, 1);
+            }
+            updateUI();
+            break;
+          }
+        }
+      }
+
+      // Enemies
+      spawnTimer++;
+      if (spawnTimer >= spawnInterval) {
+        spawnTimer = 0;
+        if (enemies.length < Math.floor(maxEnemies)) {
+          spawnEnemy();
+        }
+        if (spawnInterval > 30) spawnInterval -= 0.4;
+        if (maxEnemies < MAX_ENEMIES_CAP) {
+          maxEnemies = Math.min(MAX_ENEMIES_CAP, maxEnemies + 0.04);
+        }
+      }
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.y += e.speed;
+
+        // Reached bottom
+        if (e.y + e.height > canvas.height - UI_BAR_HEIGHT) {
+          lives--;
+          enemies.splice(i, 1);
+          updateUI();
+          if (lives <= 0) {
+            gameOver = true;
+            messageEl.style.display = 'block';
+            messageEl.innerHTML = `Game Over!<br>Final Score: ${score}<br><small>Refresh to play again</small>`;
+          }
+        }
+      }
+    }
+
+    function updateUI() {
+      scoreEl.textContent = score;
+      ammoEl.textContent = ammo;
+      livesEl.textContent = lives;
+    }
+
+    function draw() {
+        //Background image goes in this funnction.
+      if (bgImg.complete && bgImg.naturalWidth) {
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = '#0a1520';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    //Ground line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height - UI_BAR_HEIGHT);
+      ctx.lineTo(canvas.width, canvas.height - UI_BAR_HEIGHT);
+      ctx.stroke();
+
+      // Player gun — sprite points up, rotate so the barrel follows the mouse
+      const tip = barrelTip();
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(tip.angle + Math.PI / 2);
+      if (gunSprite) {
+        ctx.drawImage(gunSprite, -gunW / 2, -gunBarrelLength, gunW, gunH);
+      } else {
+        ctx.fillStyle = '#444';
+        ctx.fillRect(-30, -20, 60, 40);
+        ctx.fillStyle = '#666';
+        ctx.fillRect(-20, -35, 40, 20);
+      }
+      ctx.restore();
+
+    //Aim line
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.35)';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(tip.x, tip.y);
+      ctx.lineTo(mouseX, mouseY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Projectiles
+      projectiles.forEach(p => {
+        ctx.fillStyle = p.flavor.color;
+        ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
+      });
+
+      // Enemies
+      enemies.forEach(e => {
+        if (enemySprite) {
+          ctx.drawImage(enemySprite, e.x, e.y, e.width, e.height);
+        } else {
+          ctx.fillStyle = '#4a7c4a';
+          ctx.fillRect(e.x, e.y, e.width, e.height);
+          ctx.fillStyle = '#f00';
+          ctx.fillRect(e.x + 8, e.y + 10, 6, 6);
+          ctx.fillRect(e.x + 22, e.y + 10, 6, 6);
+        }
+      });
+
+      //Current flavor indicator
+      ctx.fillStyle = 'rgba(18, 6, 8, 0.55)';
+      ctx.fillRect(0, canvas.height - UI_BAR_HEIGHT, canvas.width, UI_BAR_HEIGHT);
+      const bottleW = 32;
+      const bottleH = 52;
+      const bottleX = canvas.width / 2 - 118;
+      const bottleY = canvas.height - UI_BAR_HEIGHT + (UI_BAR_HEIGHT - bottleH) / 2;
+      if (currentFlavor.sprite) {
+        ctx.drawImage(currentFlavor.sprite, bottleX, bottleY, bottleW, bottleH);
+      }
+      ctx.fillStyle = '#fff';
+      ctx.font = '22px "Lilita One", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`Ammo: ${currentFlavor.name}`, canvas.width / 2 + 8, canvas.height - UI_BAR_HEIGHT / 2);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    updateUI();
+    gameLoop();
+  </script>
+</body>
+</html>
